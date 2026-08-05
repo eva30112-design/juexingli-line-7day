@@ -1,0 +1,18 @@
+{
+  "name": "juexingli-line-7day",
+  "version": "1.0.0",
+  "description": "覺醒代碼《7天・把自己帶回來》LINE 官方帳號：每日推播 + 選擇題自動陪伴回覆",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^9.2.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3"
+  }
+}

@@ -77,7 +77,7 @@ async function askCompanion(userText) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-latest', // 想更有深度可改成 claude-3-5-sonnet-latest
+        model: process.env.AI_MODEL || 'claude-haiku-4-5-20251001', // 想更有深度可在 Render 設 AI_MODEL=claude-sonnet-5
         max_tokens: 400,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userText.slice(0, 1500) }],

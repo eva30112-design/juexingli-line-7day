@@ -44,14 +44,18 @@ function buildDayMessages(dayNum) {
       displayText: o.label                    // 使用者畫面上會顯示他點了什麼
     }
   }));
+  // 把選項用數字列在訊息裡（符合「1 肩頸緊　2 背痛…」的樣式），同時附上可點的快速回覆按鈕
+  const list = d.quiz.options.map(o => o.label).join('　');
   msgs.push({
     type: 'text',
-    text: `【今日選擇題】${d.quiz.question}\n（點一個最接近的就好）`,
+    text: `${d.quiz.question}\n${list}\n\n回覆最接近的代號就好，或直接打字告訴我。`,
     quickReply: { items }
   });
 
-  // 一句帶走 + 固定收尾
-  msgs.push({ type: 'text', text: `✦ 一句帶走\n${d.takeaway}\n\n${d.closing}` });
+  // 一句帶走 + 固定收尾（＋醫療提醒）
+  let tail = `✦ 一句帶走\n${d.takeaway}\n\n${d.closing}`;
+  if (d.medical) tail += `\n\n${d.medical}`;
+  msgs.push({ type: 'text', text: tail });
 
   // 第七天的邀請
   if (d.invite) msgs.push({ type: 'text', text: d.invite });
@@ -85,14 +89,9 @@ app.post('/callback', line.middleware(config), async (req, res) => {
 async function handleEvent(event) {
   const userId = event.source && event.source.userId;
 
-  // 1) 加好友 → 歡迎 + 開始 Day1
+  // 1) 加好友 → 由 LINE 內建「加入好友的歡迎訊息」負責問候；
+  //    這裡不重複發訊息，使用者回覆「開始」才啟動 7 天信（見下方）。
   if (event.type === 'follow') {
-    store.start(userId);
-    await pushMessages(userId, [
-      { type: 'text', text: '嗨，我是覺醒代碼。歡迎妳，願意給自己這 7 天。🤍' },
-      { type: 'text', text: '接下來 7 天，每天早晨我會寄一封短信給妳，一個五分鐘的小練習。今天，我們先從第一封開始。' }
-    ]);
-    await pushDay(userId, 1);
     return;
   }
 
@@ -105,11 +104,7 @@ async function handleEvent(event) {
       await pushDay(userId, 1);
       return;
     }
-    // 其他訊息：溫柔提示
-    await client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '我在。若想（重新）開始 7 天練習信，回覆「7天」就可以。想更深入，也可以看課程或關係檢視。'
-    });
+    // 其他文字：交給 LINE 內建的關鍵字／通用回覆處理，機器人不重複回覆。
     return;
   }
 
@@ -121,7 +116,10 @@ async function handleEvent(event) {
     const d = letters[dayNum];
     const opt = d && d.quiz.options.find(o => o.key === optKey);
     if (opt) {
-      await client.replyMessage(event.replyToken, { type: 'text', text: opt.reply });
+      // 先回這個選項專屬的陪伴，再送一段有溫度的支持訊息
+      const replies = [{ type: 'text', text: opt.reply }];
+      if (d.support) replies.push({ type: 'text', text: d.support });
+      await client.replyMessage(event.replyToken, replies);
     }
     return;
   }
@@ -147,8 +145,8 @@ async function runDailyPush() {
   return sent;
 }
 
-// 內建排程：早上 07:30（台北）。若主機一直清醒，這個就會運作。
-cron.schedule('30 7 * * *', runDailyPush, { timezone: 'Asia/Taipei' });
+// 內建排程：晚上 20:40（台北）。若主機一直清醒，這個就會運作。
+cron.schedule('40 20 * * *', runDailyPush, { timezone: 'Asia/Taipei' });
 
 // 外部排程觸發用（免費主機會休眠時，用 cron-job.org 之類每天 07:30 打這個網址喚醒並發信）
 // 例：GET https://你的網址/cron/daily?key=你的CRON_SECRET

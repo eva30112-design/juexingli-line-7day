@@ -111,7 +111,7 @@ async function handleEvent(event) {
     store.start(userId);
     await pushMessages(userId, [
       { type: 'text', text: '嗨，我是覺醒代碼。歡迎妳，願意給自己這 7 天。🤍' },
-      { type: 'text', text: '接下來 7 天，每天早晨我會寄一封短信給妳，一個五分鐘的小練習。今天，我們先從第一封開始。' }
+      { type: 'text', text: '接下來 7 天，每天晚上我會寄一封短信給妳，一個五分鐘的小練習。今天，我們先從第一封開始。' }
     ]);
     await pushDay(userId, 1);
     return;
@@ -133,6 +133,27 @@ async function handleEvent(event) {
       store.requestHuman(userId, true);
       await client.replyMessage(event.replyToken, { type: 'text', text: AI_HANDOFF });
       return;
+    }
+
+    // (b2) 打字代號後備：像 D1A / d3j / D2G，也能觸發七天信選擇題的陪伴回覆
+    //      （快速回覆按鈕點不到時，使用者可直接打字作答；一則可含多個代號）
+    {
+      const codeMatches = [...userText.matchAll(/[dD]\s*([1-7])\s*([a-iA-I])/g)];
+      const replies = [];
+      const seen = new Set();
+      for (const m of codeMatches) {
+        const dayNum = Number(m[1]);
+        const optKey = m[2].toUpperCase();
+        if (seen.has(dayNum + optKey)) continue;
+        seen.add(dayNum + optKey);
+        const d = letters[dayNum];
+        const opt = d && d.quiz.options.find(o => o.key === optKey);
+        if (opt) replies.push({ type: 'text', text: opt.reply });
+      }
+      if (replies.length > 0) {
+        await client.replyMessage(event.replyToken, replies.slice(0, 5));
+        return;
+      }
     }
 
     // (c) AI 模式中
@@ -226,8 +247,8 @@ async function runDailyPush() {
   return sent;
 }
 
-// 內建排程：早上 07:30（台北）。若主機一直清醒，這個就會運作。
-cron.schedule('30 7 * * *', runDailyPush, { timezone: 'Asia/Taipei' });
+// 內建排程：晚上 20:40（台北）。若主機一直清醒，這個就會運作。
+cron.schedule('40 20 * * *', runDailyPush, { timezone: 'Asia/Taipei' });
 
 // 外部排程觸發用（免費主機會休眠時，用 cron-job.org 之類每天 07:30 打這個網址喚醒並發信）
 // 例：GET https://你的網址/cron/daily?key=你的CRON_SECRET

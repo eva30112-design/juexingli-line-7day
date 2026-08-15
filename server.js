@@ -55,6 +55,12 @@ function buildDayMessages(dayNum) {
   // 推播泡泡
   d.bubbles.forEach(b => msgs.push({ type: 'text', text: b }));
 
+  // 今天的 5 分鐘（練習步驟）
+  if (Array.isArray(d.practice) && d.practice.length) {
+    const steps = d.practice.map((p, i) => `${i + 1}. ${p}`).join('\n');
+    msgs.push({ type: 'text', text: `今天的 5 分鐘\n${steps}` });
+  }
+
   // 選擇題（最後一則，附 Quick Reply）
   const items = d.quiz.options.slice(0, 13).map(o => ({
     type: 'action',

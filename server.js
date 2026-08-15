@@ -203,7 +203,7 @@ async function handleEvent(event) {
     // (e) 其他訊息：溫柔提示，並引導找依珊
     await client.replyMessage(event.replyToken, {
       type: 'text',
-      text: '我在。想找人說說話、整理心情，回覆「找依珊」，我會陪妳。\n想（重新）開始 7 天練習信，回覆「7天」就可以。'
+      text: '我在 🤍 想找人說說話，回「找依珊」；想開始 7 天練習信，回「7天」。'
     });
     return;
   }

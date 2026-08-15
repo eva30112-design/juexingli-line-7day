@@ -193,18 +193,14 @@ async function handleEvent(event) {
       return;
     }
 
-    // (d) 非 AI 模式：7 天信起始
+    // (d) 非 AI 模式：輸入「開始」或「7天」即開始連續七天練習信
     if (/^(7天|７天|開始|start)$/i.test(userText)) {
       store.start(userId);
       await client.replyMessage(event.replyToken, { type: 'text', text: '好，我們開始。這是今天的第一封信——' });
       await pushDay(userId, 1);
       return;
     }
-    // (e) 其他訊息：溫柔提示，並引導找依珊
-    await client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '我在 🤍 想找人說說話，回「找依珊」；想開始 7 天練習信，回「7天」。'
-    });
+    // (e) 其他訊息：不主動回覆（交由 LINE 後台自動回應或真人處理）
     return;
   }
 

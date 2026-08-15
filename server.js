@@ -67,8 +67,7 @@ function buildDayMessages(dayNum) {
   }));
   msgs.push({
     type: 'text',
-    text: `【今日選擇題】${d.quiz.question}\n（點一個最接近的就好）`,
-    quickReply: { items }
+    text: `【今日選擇題】${d.quiz.question}\n（點一個最接近的就好）`
   });
 
   // 一句帶走 + 固定收尾
@@ -76,6 +75,9 @@ function buildDayMessages(dayNum) {
 
   // 第七天的邀請
   if (d.invite) msgs.push({ type: 'text', text: d.invite });
+
+  // 快速回覆按鈕要掛在「最後一則」訊息，否則會被後面的訊息蓋掉、按鈕就不會顯示
+  msgs[msgs.length - 1].quickReply = { items };
 
   // LINE 一次回覆最多 5 則；超過就分批（見 pushDay）
   return msgs;
